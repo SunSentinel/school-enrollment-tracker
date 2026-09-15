@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>South Florida Public School Enrollment Trends</title>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <style>
+        /* --- Datawrapper-Inspired Newsroom Theme --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #333333;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .table-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Journalistic Copy Header Styles */
+        .chart-header {
+            margin-bottom: 22px;
+        }
+
+        .chart-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #111111;
+            margin: 0 0 6px 0;
+            line-height: 1.2;
+        }
+
+        .chart-intro {
+            font-size: 14px;
+            color: #555555;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Source Footnote Styles */
+        .chart-footer {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #ebeeec;
+        }
+
+        .chart-source {
+            font-size: 11px;
+            color: #666666;
+            letter-spacing: 0.02em;
+            margin: 0;
+        }
+
+        /* Search & Filter Component Overrides */
+        .dataTables_wrapper {
+            position: relative;
+            clear: both;
+        }
+
+        .dataTables_wrapper .dataTables_filter {
+            float: left !important;
+            text-align: left !important;
+            margin-bottom: 20px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #cccccc !important;
+            border-radius: 4px !important;
+            padding: 8px 12px !important;
+            font-size: 14px !important;
+            width: 280px !important;
+            outline: none !important;
+            background-color: #ffffff !important;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #888888 !important;
+        }
+
+        .dataTables_wrapper .dataTables_length {
+            float: right !important;
+            font-size: 13px;
+            color: #666666;
+            margin-bottom: 20px;
+            padding-top: 6px;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            padding: 4px 8px;
+            background-color: #fff;
+        }
+
+        /* Custom District / Level Dropdown Filters Toolbar */
+        .custom-filter-toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #555555;
+            font-weight: 600;
+        }
+
+        .filter-group select {
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 13px;
+            background-color: #ffffff;
+            color: #333333;
+            outline: none;
+        }
+
+        .filter-group select:focus {
+            border-color: #888888;
+        }
+
+        /* Structural Grid Elements */
+        table.dataTable {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin: 10px 0 15px 0 !important;
+            border-top: 1px solid #333333 !important;
+            border-bottom: 1px solid #333333 !important;
+        }
+
+        table.dataTable thead th {
+            font-size: 12px !important;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 700 !important;
+            color: #555555 !important;
+            padding: 12px 10px !important;
+            border-bottom: 1px solid #333333 !important;
+            border-top: none !important;
+            background-color: #ffffff !important;
+        }
+
+        table.dataTable tbody td {
+            font-size: 13.5px !important;
+            padding: 10px 10px !important;
+            border-bottom: 1px solid #ebeeec !important;
+            color: #333333;
+        }
+
+        /* Table Sorting UI Customization */
+        table.dataTable thead th.sorting,
+        table.dataTable thead th.sorting_asc,
+        table.dataTable thead th.sorting_desc {
+            background-image: none !important;
+            position: relative;
+            cursor: pointer;
+        }
+        table.dataTable thead th.sorting::after { content: " ↕"; font-size: 11px; color: #bbbbbb; padding-left: 4px; }
+        table.dataTable thead th.sorting_asc::after { content: " ▲"; font-size: 10px; color: #111111; padding-left: 4px; }
+        table.dataTable thead th.sorting_desc::after { content: " ▼"; font-size: 10px; color: #111111; padding-left: 4px; }
+
+        /* Row Interactivity */
+        table.dataTable tbody tr { background-color: #ffffff !important; }
+        table.dataTable tbody tr:hover { background-color: #f7f7f7 !important; }
+
+        /* Numeric alignment & Datawrapper Trend Badges */
+        .dt-right { text-align: right !important; }
+        .dt-center { text-align: center !important; }
+        .dt-left { text-align: left !important; }
+
+        .change-badge {
+            display: inline-block;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+            min-width: 45px;
+        }
+        .change-pos { background-color: #e6f4ea; color: #137333; }
+        .change-neg { background-color: #fce8e6; color: #c5221f; }
+        .change-neutral { background-color: #f1f3f4; color: #5f6368; }
+
+        /* Bottom Control Bar Layout */
+        .dataTables_wrapper .dataTables_info {
+            float: left !important;
+            font-size: 12.5px !important;
+            color: #666666 !important;
+            padding-top: 16px !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            float: right !important;
+            padding-top: 14px !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 5px 12px !important;
+            font-size: 12.5px !important;
+            border-radius: 4px !important;
+            border: 1px solid transparent !important;
+            color: #555555 !important;
+            background: none !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background-color: #f0f0f0 !important;
+            border: 1px solid #dbdbdb !important;
+            color: #333333 !important;
+            font-weight: 600 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background-color: #f9f9f9 !important;
+            border: 1px solid #dcdcdc !important;
+            color: #111111 !important;
+        }
+
+        /* Mobile Breakpoints to Keep Tables Responsive */
+        @media (max-width: 640px) {
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_length {
+                float: none !important;
+                text-align: left !important;
+                width: 100%;
+            }
+            .dataTables_wrapper .dataTables_filter input {
+                width: 100% !important;
+                margin-bottom: 10px;
+            }
+            .dataTables_wrapper .dataTables_length {
+                margin-bottom: 15px;
+            }
+            .custom-filter-toolbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .filter-group {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="table-container">
+    <header class="chart-header">
+        <h1 class="chart-title">South Florida public school enrollment trends</h1>
+        <p class="chart-intro">Search and filter school enrollments across Palm Beach and Broward counties over the past three school years.</p>
+    </header>
+
+    <!-- Custom Dropdown Filters for District and Level -->
+    <div class="custom-filter-toolbar">
+        <div class="filter-group">
+            <label for="district-select">District:</label>
+            <select id="district-select">
+                <option value="">All Districts</option>
+                <option value="Palm Beach">Palm Beach</option>
+                <option value="Broward">Broward</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="level-select">School Level:</label>
+            <select id="level-select">
+                <option value="">All Levels</option>
+                <option value="Elementary">Elementary</option>
+                <option value="Middle">Middle</option>
+                <option value="High">High</option>
+                <option value="Charter">Charter</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto; width: 100%;">
+        <table id="enrollment-table" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>District</th>
+                    <th>Level</th>
+                    <th>School</th>
+                    <th>2024-25</th>
+                    <th>2025-26</th>
+                    <th>2026-27</th>
+                    <th>Change</th>
+                    <th>% Change</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="chart-footer">
+        <p class="chart-source">SOURCE: Broward County Public Schools & Palm Beach County School District enrollment figures.</p>
+    </footer>
+</div>
+
+<script>
+// Embedded dataset extracted from source records
+const rawData = [
+  // PALM BEACH ELEMENTARY
+  ["Palm Beach", "Elementary", "Acreage Pines", 521, 525, 576, 55, 10.6],
+  ["Palm Beach", "Elementary", "Addison Mizner K-8", 1191, 1232, 1176, -15, -1.3],
+  ["Palm Beach", "Elementary", "Allamanda", 620, 612, 600, -20, -3.2],
+  ["Palm Beach", "Elementary", "Banyan Creek", 835, 763, 756, -79, -9.5],
+  ["Palm Beach", "Elementary", "Barton", 1118, 1084, 1034, -84, -7.5],
+  ["Palm Beach", "Elementary", "Beacon Cove (3-5)", 605, 555, 568, -37, -6.1],
+  ["Palm Beach", "Elementary", "Belle Glade", 510, 529, 534, 24, 4.7],
+  ["Palm Beach", "Elementary", "Belvedere", 441, 466, 474, 33, 7.5],
+  ["Palm Beach", "Elementary", "Benoist Farms", 371, 349, 401, 30, 8.1],
+  ["Palm Beach", "Elementary", "Berkshire", 1044, 1032, 945, -99, -9.5],
+  ["Palm Beach", "Elementary", "Binks Forest", 1248, 698, 692, -556, -44.6],
+  ["Palm Beach", "Elementary", "Blue Lake", 913, 931, 870, -43, -4.7],
+  ["Palm Beach", "Elementary", "Boca Raton", 328, 279, 294, -34, -10.4],
+  ["Palm Beach", "Elementary", "C.O. Taylor/Kirklane", 1295, 1238, 1182, -113, -8.7],
+  ["Palm Beach", "Elementary", "Calusa", 833, 832, 781, -52, -6.2],
+  ["Palm Beach", "Elementary", "Cholee Lake", 934, 897, 886, -48, -5.1],
+  ["Palm Beach", "Elementary", "Citrus Cove", 1084, 1003, 1046, -38, -3.5],
+  ["Palm Beach", "Elementary", "Coral Reef", 925, 941, 1024, 99, 10.7],
+  ["Palm Beach", "Elementary", "Coral Sunset", 640, 644, 694, 54, 8.4],
+  ["Palm Beach", "Elementary", "Crosspointe", 603, 552, 573, -30, -5.0],
+  ["Palm Beach", "Elementary", "Crystal Lakes", 749, 761, 781, 32, 4.3],
+  ["Palm Beach", "Elementary", "Cypress Trails", 528, 540, 520, -8, -1.5],
+  ["Palm Beach", "Elementary", "D.D. Eisenhower K-8", 422, 449, 520, 98, 23.2],
+  ["Palm Beach", "Elementary", "Del Prado", 693, 660, 579, -114, -16.5],
+  ["Palm Beach", "Elementary", "Diamond View", 770, 728, 739, -31, -4.0],
+  ["Palm Beach", "Elementary", "Discovery Key", 1025, 991, 872, -153, -14.9],
+  ["Palm Beach", "Elementary", "Dr. M. M. Bethune", 496, 483, 510, 14, 2.8],
+  ["Palm Beach", "Elementary", "Egret Lake", 517, 473, 458, -59, -11.4],
+  ["Palm Beach", "Elementary", "Elbridge Gale", 795, 795, 854, 59, 7.4],
+  ["Palm Beach", "Elementary", "Equestrian Trails", 805, 794, 836, 31, 3.9],
+  ["Palm Beach", "Elementary", "Everglades", 807, 769, 684, -123, -15.2],
+  ["Palm Beach", "Elementary", "Forest Hill", 938, 899, 872, -66, -7.0],
+  ["Palm Beach", "Elementary", "Forest Park", 587, 497, 481, -106, -18.1],
+  ["Palm Beach", "Elementary", "Freedom Shores", 645, 650, 624, -21, -3.3],
+  ["Palm Beach", "Elementary", "Frontier", 696, 647, 601, -95, -13.6],
+  ["Palm Beach", "Elementary", "Galaxy", 552, 513, 506, -46, -8.3],
+  ["Palm Beach", "Elementary", "Glade View", 272, 268, 316, 44, 16.2],
+  ["Palm Beach", "Elementary", "Golden Grove", 935, 946, 894, -41, -4.4],
+  ["Palm Beach", "Elementary", "Gove (K-6)", 629, 651, 710, 81, 12.9],
+  ["Palm Beach", "Elementary", "Grassy Waters", 702, 613, 532, -170, -24.2],
+  ["Palm Beach", "Elementary", "Greenacres", 712, 701, 754, 42, 5.9],
+  ["Palm Beach", "Elementary", "Grove Park", 631, 618, 693, 62, 9.8],
+  ["Palm Beach", "Elementary", "H.L. Johnson", 827, 817, 833, 6, 0.7],
+  ["Palm Beach", "Elementary", "Hagen Road", 700, 679, 659, -41, -5.9],
+  ["Palm Beach", "Elementary", "Hammock Pointe", 897, 881, 795, -102, -11.4],
+  ["Palm Beach", "Elementary", "Heritage", 824, 746, 678, -146, -17.7],
+  ["Palm Beach", "Elementary", "Hidden Oaks K-8", 830, 865, 889, 59, 7.1],
+  ["Palm Beach", "Elementary", "Highland", 912, 803, 819, -93, -10.2],
+  ["Palm Beach", "Elementary", "Hope Centennial", 690, 624, 620, -70, -10.1],
+  ["Palm Beach", "Elementary", "Indian Pines", 526, 453, 434, -92, -17.5],
+  ["Palm Beach", "Elementary", "J.C. Mitchell", 645, 598, 532, -113, -17.5],
+  ["Palm Beach", "Elementary", "Jerry Thomas", 688, 612, 576, -112, -16.3],
+  ["Palm Beach", "Elementary", "Jupiter", 829, 794, 685, -144, -17.4],
+  ["Palm Beach", "Elementary", "Jupiter Farms", 605, 600, 558, -47, -7.8],
+  ["Palm Beach", "Elementary", "K.E. Cunningham/Canal Point", 256, 242, 237, -19, -7.4],
+  ["Palm Beach", "Elementary", "Lake Park", 355, 359, 362, 7, 2.0],
+  ["Palm Beach", "Elementary", "Lantana", 466, 488, 506, 40, 8.6],
+  ["Palm Beach", "Elementary", "Liberty Park", 871, 817, 755, -116, -13.3],
+  ["Palm Beach", "Elementary", "Lighthouse (K-2)", 506, 461, 524, 18, 3.6],
+  ["Palm Beach", "Elementary", "Limestone Creek", 896, 875, 827, -69, -7.7],
+  ["Palm Beach", "Elementary", "Loxahatchee Groves", 588, 566, 661, 73, 12.4],
+  ["Palm Beach", "Elementary", "Manatee", 1183, 1056, 1114, -69, -5.8],
+  ["Palm Beach", "Elementary", "Marsh Pointe", 811, 830, 831, 20, 2.5],
+  ["Palm Beach", "Elementary", "Meadow Park", 713, 653, 683, -30, -4.2],
+  ["Palm Beach", "Elementary", "Melaleuca", 662, 629, 594, -68, -10.3],
+  ["Palm Beach", "Elementary", "Morikami Park", 808, 802, 837, 29, 3.6],
+  ["Palm Beach", "Elementary", "New Horizons", 661, 601, 570, -91, -13.8],
+  ["Palm Beach", "Elementary", "North Grade K-8", 765, 771, 727, -38, -5.0],
+  ["Palm Beach", "Elementary", "Northboro", 610, 603, 719, 109, 17.9],
+  ["Palm Beach", "Elementary", "Northmore", 667, 680, 683, 16, 2.4],
+  ["Palm Beach", "Elementary", "Orchard View", 636, 587, 582, -54, -8.5],
+  ["Palm Beach", "Elementary", "Pahokee", 281, 279, 304, 23, 8.2],
+  ["Palm Beach", "Elementary", "Palm Beach Gardens", 677, 668, 675, -2, -0.3],
+  ["Palm Beach", "Elementary", "Palm Beach Public", 359, 340, 331, -28, -7.8],
+  ["Palm Beach", "Elementary", "Palm Springs", 1021, 985, 910, -111, -10.9],
+  ["Palm Beach", "Elementary", "Palmetto", 490, 460, 500, 10, 2.0],
+  ["Palm Beach", "Elementary", "Panther Run", 694, 688, 759, 65, 9.4],
+  ["Palm Beach", "Elementary", "Pierce Hammock", 565, 455, 404, -161, -28.5],
+  ["Palm Beach", "Elementary", "Pine Grove", 328, 319, 329, 1, 0.3],
+  ["Palm Beach", "Elementary", "Pine Jog", 824, 743, 719, -105, -12.7],
+  ["Palm Beach", "Elementary", "Pioneer Park", 347, 350, 396, 49, 14.1],
+  ["Palm Beach", "Elementary", "Pleasant City", 278, 270, 259, -19, -6.8],
+  ["Palm Beach", "Elementary", "Plumosa School of the Arts K-8", 824, 748, 796, -28, -3.4],
+  ["Palm Beach", "Elementary", "Poinciana", 434, 394, 331, -103, -23.7],
+  ["Palm Beach", "Elementary", "Rolling Green", 642, 549, 580, -62, -9.7],
+  ["Palm Beach", "Elementary", "Roosevelt", 303, 341, 329, 26, 8.6],
+  ["Palm Beach", "Elementary", "Rosenwald", 262, 278, 264, 2, 0.8],
+  ["Palm Beach", "Elementary", "Royal Palm Beach", 647, 624, 587, -60, -9.3],
+  ["Palm Beach", "Elementary", "S.D. Spady", 394, 411, 448, 54, 13.7],
+  ["Palm Beach", "Elementary", "Saddle View", 0, 603, 738, 738, null],
+  ["Palm Beach", "Elementary", "Sandpiper Shores", 881, 846, 762, -119, -13.5],
+  ["Palm Beach", "Elementary", "Seminole Trails", 631, 604, 594, -37, -5.9],
+  ["Palm Beach", "Elementary", "South Grade", 581, 587, 581, 0, 0.0],
+  ["Palm Beach", "Elementary", "South Olive", 456, 503, 644, 188, 41.2],
+  ["Palm Beach", "Elementary", "Starlight Cove", 731, 699, 694, -37, -5.1],
+  ["Palm Beach", "Elementary", "Sunrise Park", 1064, 1031, 1072, 8, 0.8],
+  ["Palm Beach", "Elementary", "Sunset Palms", 903, 875, 889, -14, -1.6],
+  ["Palm Beach", "Elementary", "The Conservatory School at North Palm Beach", 872, 831, 875, 3, 0.3],
+  ["Palm Beach", "Elementary", "Timber Trace", 813, 766, 820, 7, 0.9],
+  ["Palm Beach", "Elementary", "U.B. Kinsey/Palmview", 467, 461, 436, -31, -6.6],
+  ["Palm Beach", "Elementary", "Verde K-8", 1350, 1335, 1286, -64, -4.7],
+  ["Palm Beach", "Elementary", "Village Academy (K-12)", 505, 532, 589, 84, 16.6],
+  ["Palm Beach", "Elementary", "Washington", 213, 255, 473, 260, 122.1],
+  ["Palm Beach", "Elementary", "Waters Edge", 708, 705, 730, 22, 3.1],
+  ["Palm Beach", "Elementary", "Wellington", 828, 795, 838, 10, 1.2],
+  ["Palm Beach", "Elementary", "West Gate", 718, 706, 691, -27, -3.8],
+  ["Palm Beach", "Elementary", "West Riviera", 448, 401, 445, -3, -0.7],
+  ["Palm Beach", "Elementary", "Westward", 475, 481, 447, -28, -5.9],
+  ["Palm Beach", "Elementary", "Whispering Pines", 988, 921, 818, -170, -17.2],
+  ["Palm Beach", "Elementary", "Wynnebrook", 611, 604, 639, 28, 4.6],
+
+  // PALM BEACH MIDDLE
+  ["Palm Beach", "Middle", "Bak Middle School of the Arts", 1252, 1245, 1260, 8, 0.6],
+  ["Palm Beach", "Middle", "Bear Lakes", 849, 753, 721, -128, -15.1],
+  ["Palm Beach", "Middle", "Boca Raton", 1060, 1014, 1007, -53, -5.0],
+  ["Palm Beach", "Middle", "Carver", 706, 593, 520, -186, -26.3],
+  ["Palm Beach", "Middle", "Christa McAuliffe", 1079, 1162, 1224, 145, 13.4],
+  ["Palm Beach", "Middle", "Congress", 877, 775, 681, -196, -22.3],
+  ["Palm Beach", "Middle", "Conniston", 1143, 1047, 1011, -132, -11.5],
+  ["Palm Beach", "Middle", "Crestwood", 752, 712, 749, -3, -0.4],
+  ["Palm Beach", "Middle", "Don Estridge", 1274, 1303, 1302, 28, 2.2],
+  ["Palm Beach", "Middle", "Eagles Landing", 1471, 1440, 1381, -90, -6.1],
+  ["Palm Beach", "Middle", "Emerald Cove", 1218, 1162, 1072, -146, -12.0],
+  ["Palm Beach", "Middle", "H.L. Watkins", 700, 615, 563, -137, -19.6],
+  ["Palm Beach", "Middle", "Independence", 1236, 1405, 1396, 160, 12.9],
+  ["Palm Beach", "Middle", "Jeaga", 858, 821, 759, -99, -11.5],
+  ["Palm Beach", "Middle", "John F. Kennedy", 858, 728, 747, -111, -12.9],
+  ["Palm Beach", "Middle", "Jupiter", 1276, 1180, 1208, -68, -5.3],
+  ["Palm Beach", "Middle", "L.C. Swain", 1276, 1164, 1149, -127, -10.0],
+  ["Palm Beach", "Middle", "Lake Shore", 632, 607, 616, -16, -2.5],
+  ["Palm Beach", "Middle", "Lake Worth", 1125, 959, 931, -194, -17.2],
+  ["Palm Beach", "Middle", "Lantana", 805, 733, 720, -85, -10.6],
+  ["Palm Beach", "Middle", "Loggers Run", 1097, 1136, 1154, 57, 5.2],
+  ["Palm Beach", "Middle", "Okeeheelee", 1396, 1272, 1221, -175, -12.5],
+  ["Palm Beach", "Middle", "Omni", 944, 937, 976, 32, 3.4],
+  ["Palm Beach", "Middle", "Osceola Creek", 843, 855, 822, -21, -2.5],
+  ["Palm Beach", "Middle", "Palm Springs", 1413, 1338, 1205, -208, -14.7],
+  ["Palm Beach", "Middle", "Polo Park", 1121, 1101, 1083, -38, -3.4],
+  ["Palm Beach", "Middle", "Roosevelt", 789, 732, 681, -108, -13.7],
+  ["Palm Beach", "Middle", "Tradewinds", 807, 731, 707, -100, -12.4],
+  ["Palm Beach", "Middle", "Watson B. Duncan", 1041, 945, 855, -186, -17.9],
+  ["Palm Beach", "Middle", "Wellington Landings", 1227, 1190, 1187, -40, -3.3],
+  ["Palm Beach", "Middle", "West Boynton", 899, 948, 1074, 175, 19.5],
+  ["Palm Beach", "Middle", "Western Pines", 1093, 1117, 1131, 38, 3.5],
+  ["Palm Beach", "Middle", "Woodlands", 1304, 1247, 1194, -110, -8.4],
+
+  // PALM BEACH HIGH
+  ["Palm Beach", "High", "Alexander W. Dreyfoos Jr. School of the Arts", 1354, 1351, 1360, 6, 0.4],
+  ["Palm Beach", "High", "Atlantic", 1860, 1621, 1381, -479, -25.8],
+  ["Palm Beach", "High", "Boca Raton", 2837, 2655, 2707, -130, -4.6],
+  ["Palm Beach", "High", "Boynton Beach", 1588, 1443, 1296, -292, -18.4],
+  ["Palm Beach", "High", "Dr. Joaquín García", 2559, 2844, 2887, 328, 12.8],
+  ["Palm Beach", "High", "Forest Hill", 1949, 1883, 1722, -227, -11.6],
+  ["Palm Beach", "High", "Glades Central", 974, 1014, 1006, 32, 3.3],
+  ["Palm Beach", "High", "John I. Leonard", 3241, 3154, 2874, -367, -11.3],
+  ["Palm Beach", "High", "Jupiter", 3161, 3017, 2989, -172, -5.4],
+  ["Palm Beach", "High", "Lake Worth", 2615, 2517, 2193, -422, -16.1],
+  ["Palm Beach", "High", "Olympic Heights", 2250, 2017, 1813, -437, -19.4],
+  ["Palm Beach", "High", "Pahokee Middle-Senior (6-12)", 850, 827, 815, -35, -4.1],
+  ["Palm Beach", "High", "Palm Beach Central", 2747, 2640, 2568, -179, -6.5],
+  ["Palm Beach", "High", "Palm Beach Gardens", 2398, 2282, 2130, -268, -11.2],
+  ["Palm Beach", "High", "Palm Beach Lakes", 2816, 2808, 2597, -219, -7.8],
+  ["Palm Beach", "High", "Park Vista", 2904, 2897, 2859, -45, -1.5],
+  ["Palm Beach", "High", "Royal Palm Beach", 2420, 2272, 2124, -296, -12.2],
+  ["Palm Beach", "High", "Santaluces", 2464, 2396, 2383, -81, -3.3],
+  ["Palm Beach", "High", "Seminole Ridge", 2254, 2296, 2251, -3, -0.1],
+  ["Palm Beach", "High", "Spanish River", 2725, 2700, 2742, 17, 0.6],
+  ["Palm Beach", "High", "Suncoast", 1538, 1497, 1469, -69, -4.5],
+  ["Palm Beach", "High", "Wellington", 2692, 2632, 2592, -100, -3.7],
+  ["Palm Beach", "High", "West Boca Raton", 2412, 2289, 2221, -191, -7.9],
+  ["Palm Beach", "High", "William T. Dwyer", 2196, 2178, 2059, -137, -6.2],
+
+  // PALM BEACH CHARTER
+  ["Palm Beach", "Charter", "Believers Academy", 86, 87, 75, -11, -12.8],
+  ["Palm Beach", "Charter", "Ben Gamla Palm Beach", 233, 229, 183, -50, -21.5],
+  ["Palm Beach", "Charter", "Bodwell Academy", 45, 44, 54, 9, 20.0],
+  ["Palm Beach", "Charter", "BridgePrep Academy", null, 182, 255, null, null],
+  ["Palm Beach", "Charter", "Career Academy of the Palm Beaches", 72, 76, 82, 10, 13.9],
+  ["Palm Beach", "Charter", "Connections Education Center of the Palm Beaches", 77, 94, 105, 28, 36.4],
+  ["Palm Beach", "Charter", "EdVenture", 75, 73, 56, -19, -25.3],
+  ["Palm Beach", "Charter", "Everglades Preparatory Academy", 105, 93, 98, -7, -6.7],
+  ["Palm Beach", "Charter", "Florida Futures Academy", 123, 107, 101, -22, -17.9],
+  ["Palm Beach", "Charter", "Franklin Academy - Boynton Beach", 1246, 1219, 1206, -40, -3.2],
+  ["Palm Beach", "Charter", "Franklin Academy - Palm Beach Gardens", 973, 958, 860, -113, -11.6],
+  ["Palm Beach", "Charter", "G-Star School of the Arts", 718, 740, 627, -91, -12.7],
+  ["Palm Beach", "Charter", "Glades Academy", 269, 260, 196, -73, -27.1],
+  ["Palm Beach", "Charter", "Imagine Schools - Chancellor Campus", 1041, 1045, 1039, -2, -0.2],
+  ["Palm Beach", "Charter", "Inlet Grove Community High School", 717, 860, 809, 92, 12.8],
+  ["Palm Beach", "Charter", "Montessori Academy of Early Enrichment", 195, 191, 196, 1, 0.5],
+  ["Palm Beach", "Charter", "Olympus International Academy (Closed)", 301, 249, 0, -301, -100.0],
+  ["Palm Beach", "Charter", "Palm Beach Maritime Academy Elementary", 578, 553, 514, -64, -11.1],
+  ["Palm Beach", "Charter", "Palm Beach Maritime Academy Secondary", 435, 410, 439, 4, 0.9],
+  ["Palm Beach", "Charter", "Palm Beach Prep MS", null, 16, null, null, null],
+  ["Palm Beach", "Charter", "Palm Beach Preparatory Charter Academy", 504, 568, 436, -68, -13.5],
+  ["Palm Beach", "Charter", "Palm Beach School For Autism", 349, 365, 378, 29, 8.3],
+  ["Palm Beach", "Charter", "Palmetto Park High School", null, null, 139, null, null],
+  ["Palm Beach", "Charter", "Quantum High School", 322, 314, 335, 13, 4.0],
+  ["Palm Beach", "Charter", "Renaissance Charter School at Central Palm", 757, 635, 515, -242, -32.0],
+  ["Palm Beach", "Charter", "Renaissance Charter School at Cypress", 735, 637, 607, -128, -17.4],
+  ["Palm Beach", "Charter", "Renaissance Charter School at Summit", 1001, 915, 805, -196, -19.6],
+  ["Palm Beach", "Charter", "Renaissance Charter School at Wellington", 695, 650, 621, -74, -10.6],
+  ["Palm Beach", "Charter", "Renaissance Charter School at West Palm Beach", 1011, 1004, 1063, 52, 5.1],
+  ["Palm Beach", "Charter", "SLAM - Boca Middle/High", 994, 976, 1260, 266, 26.8],
+  ["Palm Beach", "Charter", "SLAM Palm Beach High School", 307, 329, 353, 46, 15.0],
+  ["Palm Beach", "Charter", "SLAM Palm Beach Middle School", 327, 322, 373, 46, 14.1],
+  ["Palm Beach", "Charter", "Somerset Academy Avenir", null, 166, 230, null, null],
+  ["Palm Beach", "Charter", "Somerset Academy Boca East Elementary", 390, 394, 396, 6, 1.5],
+  ["Palm Beach", "Charter", "Somerset Academy Boca Middle", 94, 97, 97, 3, 3.2],
+  ["Palm Beach", "Charter", "Somerset Academy Canyons", 1021, 1023, 1350, 329, 32.2],
+  ["Palm Beach", "Charter", "Somerset Academy Lakes", 396, 391, 408, 12, 3.0],
+  ["Palm Beach", "Charter", "Somerset Academy Wellington", 465, 412, 333, -132, -28.4],
+  ["Palm Beach", "Charter", "Somerset Academy Wellington High", 109, 126, 114, 5, 4.6],
+  ["Palm Beach", "Charter", "Somerset Academy, The Dr. Bernard Kimmel Campus", 514, 543, 548, 34, 6.6],
+  ["Palm Beach", "Charter", "South Tech Academy", 1151, 1166, 1062, -89, -7.7],
+  ["Palm Beach", "Charter", "South Tech Preparatory Academy", 529, 523, 518, -11, -2.1],
+  ["Palm Beach", "Charter", "The Learning Academy at the Els Center of Excellence", 163, 171, 188, 25, 15.3],
+  ["Palm Beach", "Charter", "The Learning Center", 149, 160, 181, 32, 21.5],
+  ["Palm Beach", "Charter", "The Learning Center High School", null, 28, 43, null, null],
+  ["Palm Beach", "Charter", "Western Academy Charter", 711, 787, 774, 63, 8.9],
+  ["Palm Beach", "Charter", "Worthington High School", 407, 482, 523, 116, 28.5],
+
+  // BROWARD ELEMENTARY
+  ["Broward", "Elementary", "Atlantic West Elementary", 614, 527, 477, -137, -22.3],
+  ["Broward", "Elementary", "Banyan Elementary", 424, 390, 394, -30, -7.1],
+  ["Broward", "Elementary", "Bayview Elementary", 548, 562, 567, 19, 3.5],
+  ["Broward", "Elementary", "Bennett Elementary", 288, 270, 254, -34, -11.8],
+  ["Broward", "Elementary", "Boulevard Heights Elementary", 588, 495, 483, -105, -17.9],
+  ["Broward", "Elementary", "Broadview Elementary", 681, 605, 546, -135, -19.8],
+  ["Broward", "Elementary", "C. Robert Markham Elementary", 577, 517, 414, -163, -28.2],
+  ["Broward", "Elementary", "Castle Hill Elementary", 603, 551, 558, -45, -7.5],
+  ["Broward", "Elementary", "Central Park Elementary", 801, 821, 873, 72, 9.0],
+  ["Broward", "Elementary", "Challenger Elementary", 832, 787, 749, -83, -10.0],
+  ["Broward", "Elementary", "Chapel Trail Elementary", 604, 540, 539, -65, -10.8],
+  ["Broward", "Elementary", "Charles Drew Elementary", 424, 392, 412, -12, -2.8],
+  ["Broward", "Elementary", "Coconut Palm Elementary", 504, 521, 549, 45, 8.9],
+  ["Broward", "Elementary", "Colbert Elementary", 634, 531, 473, -161, -25.4],
+  ["Broward", "Elementary", "Collins Elementary", 268, 258, 217, -51, -19.0],
+  ["Broward", "Elementary", "Cooper City Elementary", 742, 755, 686, -56, -7.5],
+  ["Broward", "Elementary", "Coral Park Elementary", 466, 435, 398, -68, -14.6],
+  ["Broward", "Elementary", "Coral Springs Elementary", 411, 332, 296, -115, -28.0],
+  ["Broward", "Elementary", "Country Hills Elementary", 829, 799, 786, -43, -5.2],
+  ["Broward", "Elementary", "Country Isles Elementary", 765, 674, 580, -185, -24.2],
+  ["Broward", "Elementary", "Cresthaven Elementary", 469, 485, 479, 10, 2.1],
+  ["Broward", "Elementary", "Croissant Park Elementary", 673, 655, 686, 13, 1.9],
+  ["Broward", "Elementary", "Cypress Elementary", 774, 700, 676, -98, -12.7],
+  ["Broward", "Elementary", "Dania Elementary", 461, 427, 376, -85, -18.4],
+  ["Broward", "Elementary", "Davie Elementary", 632, 535, 466, -166, -26.3],
+  ["Broward", "Elementary", "Deerfield Beach Elementary", 579, 516, 473, -106, -18.3],
+  ["Broward", "Elementary", "Deerfield Park Elementary", 445, 401, 411, -34, -7.6],
+  ["Broward", "Elementary", "Dillard Elementary", 606, 563, 546, -60, -9.9],
+  ["Broward", "Elementary", "Discovery Elementary", 789, 725, 681, -108, -13.7],
+  ["Broward", "Elementary", "Dolphin Bay Elementary", 546, 479, 394, -152, -27.8],
+  ["Broward", "Elementary", "Dr. Martin Luther King, Jr. Elementary", 468, 486, 480, 12, 2.6],
+  ["Broward", "Elementary", "Driftwood Elementary", 462, 408, 362, -100, -21.6],
+  ["Broward", "Elementary", "Eagle Point Elementary", 1186, 1156, 1119, -67, -5.6],
+  ["Broward", "Elementary", "Eagle Ridge Elementary", 743, 671, 619, -124, -16.7],
+  ["Broward", "Elementary", "Embassy Creek Elementary", 1153, 1088, 1032, -121, -10.5],
+  ["Broward", "Elementary", "Endeavour Primary Learning Center", 351, 324, 334, -17, -4.8],
+  ["Broward", "Elementary", "Everglades Elementary", 840, 773, 736, -104, -12.4],
+  ["Broward", "Elementary", "Fairway Elementary", 512, 436, 653, 141, 27.5],
+  ["Broward", "Elementary", "Flamingo Elementary", 678, 610, 545, -133, -19.6],
+  ["Broward", "Elementary", "Floranada Elementary", 749, 729, 745, -4, -0.5],
+  ["Broward", "Elementary", "Forest Hills Elementary", 665, 626, 573, -92, -13.8],
+  ["Broward", "Elementary", "Fox Trail Elementary", 1107, 1040, 1007, -100, -9.0],
+  ["Broward", "Elementary", "Gator Run Elementary", 1154, 1096, 1028, -126, -10.9],
+  ["Broward", "Elementary", "Griffin Elementary", 556, 539, 536, -20, -3.6],
+  ["Broward", "Elementary", "Harbordale Elementary", 482, 465, 472, -10, -2.1],
+  ["Broward", "Elementary", "Hawkes Bluff Elementary", 646, 612, 564, -82, -12.7],
+  ["Broward", "Elementary", "Heron Heights Elementary", 1042, 1078, 1057, 15, 1.4],
+  ["Broward", "Elementary", "Hollywood Hills Elementary", 644, 656, 619, -25, -3.9],
+  ["Broward", "Elementary", "Hollywood Park Elementary", 404, 373, 398, -6, -1.5],
+  ["Broward", "Elementary", "Horizon Elementary", 547, 476, 450, -97, -17.7],
+  ["Broward", "Elementary", "Indian Trace Elementary", 670, 608, 553, -117, -17.5],
+  ["Broward", "Elementary", "James S. Hunt Elementary", 490, 428, 413, -77, -15.7],
+  ["Broward", "Elementary", "Lake Forest Elementary", 582, 528, 481, -101, -17.4],
+  ["Broward", "Elementary", "Lakeside Elementary", 499, 483, 565, 66, 13.2],
+  ["Broward", "Elementary", "Larkdale Elementary", 430, 416, 379, -51, -11.9],
+  ["Broward", "Elementary", "Lauderhill Paul Turner Elementary", 615, 596, 581, -34, -5.5],
+  ["Broward", "Elementary", "Liberty Elementary", 677, 633, 604, -73, -10.8],
+  ["Broward", "Elementary", "Lloyd Estates Elementary", 409, 390, 362, -47, -11.5],
+  ["Broward", "Elementary", "Manatee Bay Elementary", 975, 918, 821, -154, -15.8],
+  ["Broward", "Elementary", "Maplewood Elementary", 471, 481, 446, -25, -5.3],
+  ["Broward", "Elementary", "Margate Elementary", 1010, 954, 913, -97, -9.6],
+  ["Broward", "Elementary", "Mary M. Bethune Elementary", 398, 377, 361, -37, -9.3],
+  ["Broward", "Elementary", "McNab Elementary", 554, 513, 508, -46, -8.3],
+  ["Broward", "Elementary", "Meadowbrook Elementary", 704, 646, 550, -154, -21.9],
+  ["Broward", "Elementary", "Miramar Elementary", 410, 395, 397, -13, -3.2],
+  ["Broward", "Elementary", "Mirror Lake Elementary", 637, 579, 496, -141, -22.1],
+  ["Broward", "Elementary", "Morrow Elementary", 558, 498, 451, -107, -19.2],
+  ["Broward", "Elementary", "Nob Hill Elementary", 526, 490, 427, -99, -18.8],
+  ["Broward", "Elementary", "Norcrest Elementary", 682, 632, 589, -93, -13.6],
+  ["Broward", "Elementary", "North Andrews Gardens Elementary", 741, 686, 616, -125, -16.9],
+  ["Broward", "Elementary", "North Fork Elementary (Closed)", 431, 389, 0, -431, -100.0],
+  ["Broward", "Elementary", "North Lauderdale Elementary", 668, 656, 625, -43, -6.4],
+  ["Broward", "Elementary", "North Side Elementary", 291, 294, 299, 8, 2.7],
+  ["Broward", "Elementary", "Nova Blanche Forman Elementary", 739, 715, 649, -90, -12.2],
+  ["Broward", "Elementary", "Nova Dwight D. Eisenhower Elementary", 750, 718, 691, -59, -7.9],
+  ["Broward", "Elementary", "Oakland Park Elementary", 557, 504, 510, -47, -8.4],
+  ["Broward", "Elementary", "Oakridge Elementary", 437, 410, 369, -68, -15.6],
+  ["Broward", "Elementary", "Orange Brook Elementary", 705, 609, 569, -136, -19.3],
+  ["Broward", "Elementary", "Oriole Elementary", 721, 760, 733, 12, 1.7],
+  ["Broward", "Elementary", "Palm Cove Elementary (Closed)", 389, 354, 0, -389, -100.0],
+  ["Broward", "Elementary", "Palmview Elementary", 545, 526, 509, -36, -6.6],
+  ["Broward", "Elementary", "Panther Run Elementary (Closed)", 345, 293, 0, -345, -100.0],
+  ["Broward", "Elementary", "Park Lakes Elementary", 895, 882, 831, -64, -7.2],
+  ["Broward", "Elementary", "Park Ridge Elementary", 548, 506, 474, -74, -13.5],
+  ["Broward", "Elementary", "Park Springs Elementary", 799, 727, 682, -117, -14.6],
+  ["Broward", "Elementary", "Park Trails Elementary", 977, 1027, 1056, 79, 8.1],
+  ["Broward", "Elementary", "Parkside Elementary", 713, 657, 589, -124, -17.4],
+  ["Broward", "Elementary", "Pasadena Lakes Elementary", 486, 451, 427, -59, -12.1],
+  ["Broward", "Elementary", "Pembroke Lakes Elementary", 625, 603, 572, -53, -8.5],
+  ["Broward", "Elementary", "Pembroke Pines Elementary", 598, 526, 521, -77, -12.9],
+  ["Broward", "Elementary", "Peters Elementary", 558, 529, 468, -90, -16.1],
+  ["Broward", "Elementary", "Pines Lakes Elementary", 427, 402, 500, 73, 17.1],
+  ["Broward", "Elementary", "Pinewood Elementary", 591, 511, 485, -106, -17.9],
+  ["Broward", "Elementary", "Plantation Elementary", 591, 642, 596, 5, 0.8],
+  ["Broward", "Elementary", "Plantation Park Elementary", 489, 455, 454, -35, -7.2],
+  ["Broward", "Elementary", "Pompano Beach Elementary", 511, 480, 445, -66, -12.9],
+  ["Broward", "Elementary", "Quiet Waters Elementary", 1115, 997, 971, -144, -12.9],
+  ["Broward", "Elementary", "Ramblewood Elementary", 657, 603, 570, -87, -13.2],
+  ["Broward", "Elementary", "Riverglades Elementary", 1009, 984, 967, -42, -4.2],
+  ["Broward", "Elementary", "Riverland Elementary", 497, 448, 456, -41, -8.2],
+  ["Broward", "Elementary", "Riverside Elementary", 681, 694, 684, 3, 0.4],
+  ["Broward", "Elementary", "Rock Island Elementary", 530, 507, 529, -1, -0.2],
+  ["Broward", "Elementary", "Royal Palm Elementary", 755, 729, 753, -2, -0.3],
+  ["Broward", "Elementary", "Sanders Park Elementary", 441, 405, 382, -59, -13.4],
+  ["Broward", "Elementary", "Sandpiper Elementary", 613, 603, 563, -50, -8.2],
+  ["Broward", "Elementary", "Sawgrass Elementary", 865, 790, 709, -156, -18.0],
+  ["Broward", "Elementary", "Sea Castle Elementary", 890, 913, 874, -16, -1.8],
+  ["Broward", "Elementary", "Sheridan Hills Elementary", 409, 360, 323, -86, -21.0],
+  ["Broward", "Elementary", "Sheridan Park Elementary", 477, 434, 393, -84, -17.6],
+  ["Broward", "Elementary", "Silver Lakes Elementary", 322, 332, 317, -5, -1.6],
+  ["Broward", "Elementary", "Silver Palms Elementary", 459, 421, 465, 6, 1.3],
+  ["Broward", "Elementary", "Silver Ridge Elementary", 841, 774, 724, -117, -13.9],
+  ["Broward", "Elementary", "Stephen Foster Elementary", 637, 611, 564, -73, -11.5],
+  ["Broward", "Elementary", "Stirling Elementary", 536, 504, 473, -63, -11.8],
+  ["Broward", "Elementary", "Sunland Park Academy", 419, 380, 353, -66, -15.8],
+  ["Broward", "Elementary", "Sunset Lakes Elementary", 665, 549, 519, -146, -22.0],
+  ["Broward", "Elementary", "Sunshine Elementary (Closed)", 427, 387, 0, -427, -100.0],
+  ["Broward", "Elementary", "Tamarac Elementary", 594, 515, 481, -113, -19.0],
+  ["Broward", "Elementary", "Tedder Elementary", 619, 582, 519, -100, -16.2],
+  ["Broward", "Elementary", "Thurgood Marshall Elementary", 322, 323, 357, 35, 10.9],
+  ["Broward", "Elementary", "Tradewinds Elementary", 930, 840, 756, -174, -18.7],
+  ["Broward", "Elementary", "Tropical Elementary", 780, 727, 662, -118, -15.1],
+  ["Broward", "Elementary", "Village Elementary", 678, 631, 577, -101, -14.9],
+  ["Broward", "Elementary", "Virginia Shuman Young Elementary", 687, 699, 675, -12, -1.7],
+  ["Broward", "Elementary", "Walker Elementary", 461, 395, 548, 87, 18.9],
+  ["Broward", "Elementary", "Watkins Elementary", 390, 329, 301, -89, -22.8],
+  ["Broward", "Elementary", "Welleby Elementary", 626, 617, 573, -53, -8.5],
+  ["Broward", "Elementary", "West Hollywood Elementary", 479, 464, 468, -11, -2.3],
+  ["Broward", "Elementary", "Westchester Elementary", 979, 926, 844, -135, -13.8],
+  ["Broward", "Elementary", "Westwood Heights Elementary", 522, 524, 484, -38, -7.3],
+  ["Broward", "Elementary", "Wilton Manors Elementary", 567, 525, 491, -76, -13.4],
+  ["Broward", "Elementary", "Winston Park Elementary", 950, 863, 840, -110, -11.6],
+  ["Broward", "Elementary", "Annabel C. Perry PK-8", 577, 508, 499, -78, -13.5],
+  ["Broward", "Elementary", "Beachside Montessori Village", 795, 786, 776, -19, -2.4],
+  ["Broward", "Elementary", "Broward Virtual Instruction Program", 90, 74, 63, -27, -30.0],
+  ["Broward", "Elementary", "Coconut Creek K-8 Academy of Excellence", 472, 498, 565, 93, 19.7],
+  ["Broward", "Elementary", "Coral Cove Academy of the Arts", 442, 513, 558, 116, 26.2],
+  ["Broward", "Elementary", "Gulfstream Academy of Hallandale Beach", 1267, 1146, 1018, -249, -19.7],
+  ["Broward", "Elementary", "Hollywood Central Preparatory K-8", 311, 366, 425, 114, 36.7],
+  ["Broward", "Elementary", "Silver Shores STEAM Academy K-8", 333, 364, 397, 64, 19.2],
+
+  // BROWARD MIDDLE
+  ["Broward", "Middle", "Apollo Middle", 1145, 1221, 1126, -19, -1.7],
+  ["Broward", "Middle", "Attucks Middle", 637, 490, 429, -208, -32.7],
+  ["Broward", "Middle", "Bair Middle", 705, 647, 560, -145, -20.6],
+  ["Broward", "Middle", "Coral Springs Middle", 986, 1022, 1121, 135, 13.7],
+  ["Broward", "Middle", "Crystal Lake Middle", 931, 855, 821, -110, -11.8],
+  ["Broward", "Middle", "Deerfield Beach Middle", 1149, 1065, 1036, -113, -9.8],
+  ["Broward", "Middle", "Driftwood Middle", 951, 836, 761, -190, -20.0],
+  ["Broward", "Middle", "Falcon Cove Middle", 2098, 2092, 2143, 45, 2.1],
+  ["Broward", "Middle", "Forest Glen Middle", 1038, 941, 733, -305, -29.4],
+  ["Broward", "Middle", "Glades Middle", 1034, 861, 698, -336, -32.5],
+  ["Broward", "Middle", "Indian Ridge Middle", 1837, 1769, 1713, -124, -6.8],
+  ["Broward", "Middle", "James S. Rickards Middle", 776, 833, 772, -4, -0.5],
+  ["Broward", "Middle", "Lauderdale Lakes Middle", 778, 682, 577, -201, -25.8],
+  ["Broward", "Middle", "Lyons Creek Middle", 1478, 1292, 1132, -346, -23.4],
+  ["Broward", "Middle", "Margate Middle", 937, 816, 698, -239, -25.5],
+  ["Broward", "Middle", "McNicol Middle", 620, 492, 415, -205, -33.1],
+  ["Broward", "Middle", "New Renaissance Middle", 1002, 824, 765, -237, -23.7],
+  ["Broward", "Middle", "New River Middle", 1577, 1406, 1336, -241, -15.3],
+  ["Broward", "Middle", "Nova Middle", 1304, 1331, 1362, 58, 4.4],
+  ["Broward", "Middle", "Olsen Middle", 600, 564, 506, -94, -15.7],
+  ["Broward", "Middle", "Parkway Middle", 910, 838, 722, -188, -20.7],
+  ["Broward", "Middle", "Pioneer Middle", 1451, 1454, 1443, -8, -0.6],
+  ["Broward", "Middle", "Plantation Middle (Closed)", 561, 559, 0, -561, -100.0],
+  ["Broward", "Middle", "Pompano Beach Middle", 1091, 1160, 1116, 25, 2.3],
+  ["Broward", "Middle", "Ramblewood Middle", 1002, 1050, 1099, 97, 9.7],
+  ["Broward", "Middle", "Sawgrass Springs Middle", 965, 927, 863, -102, -10.6],
+  ["Broward", "Middle", "Seminole Middle", 1024, 1003, 943, -81, -7.9],
+  ["Broward", "Middle", "Silver Lakes Middle", 737, 622, 554, -183, -24.8],
+  ["Broward", "Middle", "Silver Trail Middle", 1192, 1141, 1061, -131, -11.0],
+  ["Broward", "Middle", "Sunrise Middle", 1137, 1087, 1044, -93, -8.2],
+  ["Broward", "Middle", "Tequesta Trace Middle", 1310, 1231, 1202, -108, -8.2],
+  ["Broward", "Middle", "Walter C. Young Middle", 690, 655, 538, -152, -22.0],
+  ["Broward", "Middle", "Westglades Middle", 1642, 1684, 1729, 87, 5.3],
+  ["Broward", "Middle", "Westpine Middle", 738, 643, 581, -157, -21.3],
+  ["Broward", "Middle", "William Dandy Middle", 659, 654, 662, 3, 0.5],
+  ["Broward", "Middle", "Pines Collegiate Academy 6-12", 642, 732, 831, 189, 29.4],
+
+  // BROWARD HIGH
+  ["Broward", "High", "Atlantic Technical High School", 680, 694, 693, 13, 1.9],
+  ["Broward", "High", "Blanche Ely High School", 1931, 1822, 1684, -247, -12.8],
+  ["Broward", "High", "Boyd H. Anderson High School", 2286, 2116, 1848, -438, -19.2],
+  ["Broward", "High", "Charles W. Flanagan High School", 2213, 2140, 1852, -361, -16.3],
+  ["Broward", "High", "Coconut Creek High School", 1982, 1920, 1847, -135, -6.8],
+  ["Broward", "High", "College Academy @ BC", 490, 509, 539, 49, 10.0],
+  ["Broward", "High", "Cooper City High School", 2417, 2401, 2265, -152, -6.3],
+  ["Broward", "High", "Coral Glades High School", 2860, 2923, 2802, -58, -2.0],
+  ["Broward", "High", "Coral Springs High School", 2221, 2065, 1962, -259, -11.7],
+  ["Broward", "High", "Cypress Bay High School", 4585, 4396, 4484, -101, -2.2],
+  ["Broward", "High", "Deerfield Beach High School", 2144, 2030, 1944, -200, -9.3],
+  ["Broward", "High", "Everglades High School", 1994, 1896, 1635, -359, -18.0],
+  ["Broward", "High", "Fort Lauderdale High School", 2288, 2333, 2239, -49, -2.1],
+  ["Broward", "High", "Hallandale High School", 1055, 964, 658, -397, -37.6],
+  ["Broward", "High", "Hollywood Hills High School", 1720, 1622, 1350, -370, -21.5],
+  ["Broward", "High", "J. P. Taravella High School", 2456, 2312, 2078, -378, -15.4],
+  ["Broward", "High", "Marjory Stoneman Douglas High School", 3098, 3121, 3058, -40, -1.3],
+  ["Broward", "High", "McArthur High School", 1868, 1858, 1863, -5, -0.3],
+  ["Broward", "High", "Miramar High School", 1965, 1833, 1568, -397, -20.2],
+  ["Broward", "High", "Monarch High School", 2237, 2230, 2226, -11, -0.5],
+  ["Broward", "High", "Northeast High School", 1717, 1822, 1665, -52, -3.0],
+  ["Broward", "High", "Nova High School", 2433, 2535, 2543, 110, 4.5],
+  ["Broward", "High", "Piper High School", 2266, 2187, 2216, -50, -2.2],
+  ["Broward", "High", "Plantation 6-12", 1702, 1580, 1690, -12, -0.7],
+  ["Broward", "High", "Pompano Beach High School", 1326, 1343, 1334, 8, 0.6],
+  ["Broward", "High", "Sheridan Technical High School", 551, 548, 519, -32, -5.8],
+  ["Broward", "High", "South Broward High School", 2372, 2259, 2162, -210, -8.9],
+  ["Broward", "High", "South Plantation High School", 2321, 2306, 2279, -42, -1.8],
+  ["Broward", "High", "Stranahan High School", 1308, 1251, 1129, -179, -13.7],
+  ["Broward", "High", "West Broward High School", 2543, 2451, 2360, -183, -7.2],
+  ["Broward", "High", "Western High School", 3560, 3284, 3081, -479, -13.5],
+  ["Broward", "High", "William T. McFatter Technical High School", 597, 605, 610, 13, 2.2],
+  ["Broward", "High", "Broward Virtual School", 533, 491, 463, -70, -13.1],
+  ["Broward", "High", "Dillard 6-12", 2030, 1780, 1706, -324, -16.0],
+  ["Broward", "High", "Lauderhill 6-12", 711, 660, 585, -126, -17.7],
+  ["Broward", "High", "Millennium 6-12 Collegiate Academy", 1461, 1441, 1471, 10, 0.7],
+
+  // BROWARD CHARTER
+  ["Broward", "Charter", "Academic Solutions Academy - A", 213, 198, 150, -63, -29.6],
+  ["Broward", "Charter", "Academic Solutions High School", 227, 171, 133, -94, -41.4],
+  ["Broward", "Charter", "Andrews High School", 255, 280, 262, 7, 2.7],
+  ["Broward", "Charter", "Ascend Career Academy", 217, 179, 121, -96, -44.2],
+  ["Broward", "Charter", "Atlantic Montessori Charter School", 72, 55, 40, -32, -44.4],
+  ["Broward", "Charter", "Atlantic Montessori Charter School - West Campus", 123, 104, 65, -58, -47.2],
+  ["Broward", "Charter", "Avant Garde Academy of Broward", 1130, 1167, 1049, -81, -7.2],
+  ["Broward", "Charter", "Avant Garde Academy Foundation K8", 93, 94, 96, 3, 3.2],
+  ["Broward", "Charter", "Avant Garde Academy K-5 Broward", 963, 922, 867, -96, -10.0],
+  ["Broward", "Charter", "Ben Gamla Charter School", 355, 639, 654, 299, 84.2],
+  ["Broward", "Charter", "Ben Gamla Charter School South Broward", 292, 5, 1, -291, -99.7],
+  ["Broward", "Charter", "BridgePrep Academy of Broward K-8", 145, 142, 500, 355, 244.8],
+  ["Broward", "Charter", "BridgePrep Academy of Hollywood Hills", 353, 356, 465, 112, 31.7],
+  ["Broward", "Charter", "Broward Math and Science Schools", 270, 228, 225, -45, -16.7],
+  ["Broward", "Charter", "Central Charter School", 1392, 1410, 1383, -9, -0.6],
+  ["Broward", "Charter", "Championship Academy of Distinction at Davie (Closed)", 420, 357, 0, -420, -100.0],
+  ["Broward", "Charter", "Championship Academy of Distinction at Hollywood (Closed)", 258, 236, 0, -258, -100.0],
+  ["Broward", "Charter", "Championship Academy of Distinction Middle School (Closed)", 245, 234, 0, -245, -100.0],
+  ["Broward", "Charter", "Charter School of Excellence at Davie", 225, 235, 211, -14, -6.2],
+  ["Broward", "Charter", "City of Pembroke Pines Elementary - West/Central/East", 2028, 2051, 2047, 19, 0.9],
+  ["Broward", "Charter", "City of Pembroke Pines High", 2174, 2173, 2168, -6, -0.3],
+  ["Broward", "Charter", "City of Pembroke Pines Middle - West/Central", 1352, 1366, 1366, 14, 1.0],
+  ["Broward", "Charter", "Coral Springs Charter School", 1766, 1769, 1751, -15, -0.8],
+  ["Broward", "Charter", "Eagles' Nest Charter Academy", 318, 264, 197, -121, -38.1],
+  ["Broward", "Charter", "Eagles' Nest Middle Charter School", 50, 47, 46, -4, -8.0],
+  ["Broward", "Charter", "Everest Charter School", 147, 139, 122, -25, -17.0],
+  ["Broward", "Charter", "Franklin Academy - Pembroke Pines", 1351, 1306, 1290, -61, -4.5],
+  ["Broward", "Charter", "Franklin Academy - Pembroke Pines High School", 1263, 1086, 1150, -113, -8.9],
+  ["Broward", "Charter", "Franklin Academy Cooper City", 1316, 1314, 1338, 22, 1.7],
+  ["Broward", "Charter", "Franklin Academy F", 923, 854, 822, -101, -10.9],
+  ["Broward", "Charter", "Franklin Academy Sunrise", 1337, 1363, 1387, 50, 3.7],
+  ["Broward", "Charter", "Greentree Prep Charter School", 280, 257, 266, -14, -5.0],
+  ["Broward", "Charter", "Hollywood Academy of Arts and Science Elementary", 1139, 1120, 1153, 14, 1.2],
+  ["Broward", "Charter", "Hollywood Academy of Arts and Science Middle", 447, 475, 485, 38, 8.5],
+  ["Broward", "Charter", "Imagine School at Broward", 1078, 1111, 1113, 35, 3.2],
+  ["Broward", "Charter", "Imagine Charter School at Weston", 1092, 1102, 1115, 23, 2.1],
+  ["Broward", "Charter", "Imagine Charter School at North Lauderdale Elementary", 427, 418, 375, -52, -12.2],
+  ["Broward", "Charter", "Imagine Schools - Plantation Campus", 442, 549, 563, 121, 27.4],
+  ["Broward", "Charter", "Innovation Charter School", 402, 397, 370, -32, -8.0],
+  ["Broward", "Charter", "International School of Broward", 72, 74, 107, 35, 48.6],
+  ["Broward", "Charter", "International Studies Academy High School", 236, 232, 233, -3, -1.3],
+  ["Broward", "Charter", "International Studies Academy Middle School", 288, 285, 263, -25, -8.7],
+  ["Broward", "Charter", "New Life Charter Academy", 112, 116, 110, -2, -1.8],
+  ["Broward", "Charter", "North Broward Academy of Excellence Elementary", 666, 619, 637, -29, -4.4],
+  ["Broward", "Charter", "North Broward Academy of Excellence Middle", 374, 352, 377, 3, 0.8],
+  ["Broward", "Charter", "Panacea Prep Charter School", 114, 82, 76, -38, -33.3],
+  ["Broward", "Charter", "Paragon Academy of Technology", 123, 97, 90, -33, -26.8],
+  ["Broward", "Charter", "Pines Academy of Innovation and Leadership", 479, 437, 466, -13, -2.7],
+  ["Broward", "Charter", "Renaissance Charter School at Cooper City", 1215, 1235, 1267, 52, 4.3],
+  ["Broward", "Charter", "Renaissance Charter School at University", 1448, 1454, 1451, 3, 0.2],
+  ["Broward", "Charter", "Renaissance Charter School at Coral Springs", 1501, 1517, 1556, 55, 3.7],
+  ["Broward", "Charter", "Renaissance Charter School at Plantation", 861, 905, 859, -2, -0.2],
+  ["Broward", "Charter", "Renaissance Charter Schools at Pines", 777, 661, 664, -113, -14.5],
+  ["Broward", "Charter", "RISE Academy School of Science and Technology", 360, 316, 323, -37, -10.3],
+  ["Broward", "Charter", "Sandra Marie Curtis High School", 276, 378, 325, 49, 17.8],
+  ["Broward", "Charter", "Somerset Arts Conservatory", 400, 376, 387, -13, -3.3],
+  ["Broward", "Charter", "Somerset Academy Charter High School Miramar Campus (Closed)", 329, 276, 0, -329, -100.0],
+  ["Broward", "Charter", "Somerset Academy Charter School Miramar", 523, 515, 502, -21, -4.0],
+  ["Broward", "Charter", "Somerset Academy Davie Charter School", 149, 151, 150, 1, 0.7],
+  ["Broward", "Charter", "Somerset Academy East Preparatory", 167, 152, 131, -36, -21.6],
+  ["Broward", "Charter", "Somerset Academy", 643, 639, 645, 2, 0.3],
+  ["Broward", "Charter", "Somerset Academy Elementary South", 344, 349, 352, 8, 2.3],
+  ["Broward", "Charter", "Somerset Academy Charter High School", 1441, 1520, 1514, 73, 5.1],
+  ["Broward", "Charter", "Somerset Academy Key Charter High School (Closed)", 301, 306, 0, -301, -100.0],
+  ["Broward", "Charter", "Somerset Academy Middle", 1045, 1068, 1040, -5, -0.5],
+  ["Broward", "Charter", "Somerset Academy Miramar Middle", 408, 423, 412, 4, 1.0],
+  ["Broward", "Charter", "Somerset Academy Pompano", 159, 152, 147, -12, -7.5],
+  ["Broward", "Charter", "Somerset Academy Riverside", 431, 408, 383, -48, -11.1],
+  ["Broward", "Charter", "Somerset Academy Riverside Charter Middle School", 310, 322, 294, -16, -5.2],
+  ["Broward", "Charter", "Somerset Preparatory Academy at Riverside", 372, 357, 59, -313, -84.1],
+  ["Broward", "Charter", "Somerset Preparatory Academy Charter School at North Lauderdale", 700, 721, 722, 22, 3.1],
+  ["Broward", "Charter", "Somerset Academy Miramar South", 216, 215, 212, -4, -1.9],
+  ["Broward", "Charter", "Somerset Academy Neighborhood", 466, 463, 421, -45, -9.7],
+  ["Broward", "Charter", "Somerset Collegiate Academy Central Miramar", 364, 351, 637, 273, 75.0],
+  ["Broward", "Charter", "Somerset Parkland Academy", 991, 1031, 1046, 55, 5.5],
+  ["Broward", "Charter", "Somerset Pines Academy", 453, 439, 428, -25, -5.5],
+  ["Broward", "Charter", "Somerset Preparatory Academy Charter High School at North Lauderdale", 345, 326, 317, -28, -8.1],
+  ["Broward", "Charter", "Somerset Village Academy", 252, 241, 252, 0, 0.0],
+  ["Broward", "Charter", "Somerset Academy Village Charter Middle School", 163, 153, 145, -18, -11.0],
+  ["Broward", "Charter", "South Broward Montessori Charter School", 175, 173, 155, -20, -11.4],
+  ["Broward", "Charter", "Summit Academy Charter School", 400, 417, 357, -43, -10.8],
+  ["Broward", "Charter", "SunEd High School of North Broward", 332, 315, 253, -79, -23.8],
+  ["Broward", "Charter", "SunEd High School of South Broward", 358, 346, 257, -101, -28.2],
+  ["Broward", "Charter", "SunFire High School", 484, 462, 318, -166, -34.3],
+  ["Broward", "Charter", "Sunshine Elementary", 221, 198, 170, -51, -23.1],
+  ["Broward", "Charter", "West Broward Academy", 785, 748, 722, -63, -8.0]
+];
+
+$(document).ready(function() {
+    // Custom functional renderers for formatting numbers and badges
+    function formatNumber(val) {
+        if (val === null || val === undefined) return '—';
+        return val.toLocaleString();
+    }
+
+    function renderChangeBadge(data, type, row) {
+        if (data === null || data === undefined) return '—';
+        if (type === 'display') {
+            var badgeClass = 'change-neutral';
+            var sign = '';
+            if (data > 0) {
+                badgeClass = 'change-pos';
+                sign = '+';
+            } else if (data < 0) {
+                badgeClass = 'change-neg';
+            }
+            return '<span class="change-badge ' + badgeClass + '">' + sign + data.toFixed(1) + '%</span>';
+        }
+        return data; // Raw value used for exact numeric sorting
+    }
+
+    function renderRawChange(data, type, row) {
+        if (data === null || data === undefined) return '—';
+        if (type === 'display') {
+            var sign = data > 0 ? '+' : '';
+            return sign + data.toLocaleString();
+        }
+        return data;
+    }
+
+    // Core DataTable initialization matching your exact Datawrapper layout
+    const table = $('#enrollment-table').DataTable({
+        data: rawData,
+        columns: [
+            { title: "District", className: 'dt-left' },
+            { title: "Level", className: 'dt-left' },
+            { title: "School", className: 'dt-left' },
+            { title: "2024-25", className: 'dt-right', render: formatNumber },
+            { title: "2025-26", className: 'dt-right', render: formatNumber },
+            { title: "2026-27", className: 'dt-right', render: formatNumber },
+            { title: "Change", className: 'dt-right', render: renderRawChange },
+            { title: "% Change", className: 'dt-center', render: renderChangeBadge }
+        ],
+        pageLength: 25,
+        order: [[0, 'asc'], [2, 'asc']], // Sort by District, then School Name
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search schools or districts...",
+            lengthMenu: "Show _MENU_ rows",
+            info: "Showing _START_ to _END_ of _TOTAL_ schools",
+            paginate: {
+                next: "Next →",
+                previous: "← Previous"
+            }
+        }
+    });
+
+    // Integrated Dropdown Filter Event Handlers
+    $('#district-select').on('change', function() {
+        table.column(0).search(this.value).draw();
+    });
+
+    $('#level-select').on('change', function() {
+        table.column(1).search(this.value).draw();
+    });
+});
+</script>
+
+</body>
+</html>
