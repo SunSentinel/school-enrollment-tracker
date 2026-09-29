@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
     <style>
-        /* --- Datawrapper-Inspired Newsroom Theme --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #333333;
@@ -25,7 +24,6 @@
             margin: 0 auto;
         }
 
-        /* Journalistic Copy Header Styles */
         .chart-header {
             margin-bottom: 22px;
         }
@@ -45,7 +43,6 @@
             line-height: 1.4;
         }
 
-        /* Source Footnote Styles */
         .chart-footer {
             margin-top: 20px;
             padding-top: 12px;
@@ -59,7 +56,6 @@
             margin: 0;
         }
 
-        /* Search & Filter Component Overrides */
         .dataTables_wrapper {
             position: relative;
             clear: both;
@@ -101,7 +97,6 @@
             background-color: #fff;
         }
 
-        /* Custom District / Level Dropdown Filters Toolbar */
         .custom-filter-toolbar {
             display: flex;
             gap: 15px;
@@ -132,7 +127,6 @@
             border-color: #888888;
         }
 
-        /* Structural Grid Elements */
         table.dataTable {
             border-collapse: collapse !important;
             width: 100% !important;
@@ -160,7 +154,6 @@
             color: #333333;
         }
 
-        /* Table Sorting UI Customization */
         table.dataTable thead th.sorting,
         table.dataTable thead th.sorting_asc,
         table.dataTable thead th.sorting_desc {
@@ -172,11 +165,9 @@
         table.dataTable thead th.sorting_asc::after { content: " ▲"; font-size: 10px; color: #111111; padding-left: 4px; }
         table.dataTable thead th.sorting_desc::after { content: " ▼"; font-size: 10px; color: #111111; padding-left: 4px; }
 
-        /* Row Interactivity */
         table.dataTable tbody tr { background-color: #ffffff !important; }
         table.dataTable tbody tr:hover { background-color: #f7f7f7 !important; }
 
-        /* Numeric alignment & Datawrapper Trend Badges */
         .dt-right { text-align: right !important; }
         .dt-center { text-align: center !important; }
         .dt-left { text-align: left !important; }
@@ -194,7 +185,6 @@
         .change-neg { background-color: #fce8e6; color: #c5221f; }
         .change-neutral { background-color: #f1f3f4; color: #5f6368; }
 
-        /* Bottom Control Bar Layout */
         .dataTables_wrapper .dataTables_info {
             float: left !important;
             font-size: 12.5px !important;
@@ -230,7 +220,6 @@
             color: #111111 !important;
         }
 
-        /* Mobile Breakpoints to Keep Tables Responsive */
         @media (max-width: 640px) {
             .dataTables_wrapper .dataTables_filter,
             .dataTables_wrapper .dataTables_length {
@@ -263,7 +252,6 @@
         <p class="chart-intro">Search and filter school enrollments across Palm Beach and Broward counties over the past three school years.</p>
     </header>
 
-    <!-- Custom Dropdown Filters for District and Level -->
     <div class="custom-filter-toolbar">
         <div class="filter-group">
             <label for="district-select">District:</label>
@@ -281,6 +269,7 @@
                 <option value="Middle">Middle</option>
                 <option value="High">High</option>
                 <option value="Charter">Charter</option>
+                <option value="Combo">Combo</option>
             </select>
         </div>
     </div>
@@ -310,7 +299,6 @@
 </div>
 
 <script>
-// Embedded dataset extracted from source records
 const rawData = [
   // PALM BEACH ELEMENTARY
   ["Palm Beach", "Elementary", "Acreage Pines", 521, 525, 576, 55, 10.6],
@@ -841,8 +829,21 @@ const rawData = [
   ["Broward", "Charter", "West Broward Academy", 785, 748, 722, -63, -8.0]
 ];
 
+// PRE-PROCESSING STEP:
+// Loops through rawData and forces Level (Index 1) to "Combo" 
+// for ANY school containing "6-12", "k-8", or "pk-8"
+const processedData = rawData.map(row => {
+    const schoolName = row[2]; // School Name
+    const nameLower = schoolName.toLowerCase();
+
+    // Check for 6-12, k-8, or pk-8
+    if (nameLower.includes("6-12") || nameLower.includes("k-8") || nameLower.includes("pk-8")) {
+        return [row[0], "Combo", row[2], row[3], row[4], row[5], row[6], row[7]];
+    }
+    return row;
+});
+
 $(document).ready(function() {
-    // Custom functional renderers for formatting numbers and badges
     function formatNumber(val) {
         if (val === null || val === undefined) return '—';
         return val.toLocaleString();
@@ -861,7 +862,7 @@ $(document).ready(function() {
             }
             return '<span class="change-badge ' + badgeClass + '">' + sign + data.toFixed(1) + '%</span>';
         }
-        return data; // Raw value used for exact numeric sorting
+        return data;
     }
 
     function renderRawChange(data, type, row) {
@@ -873,9 +874,9 @@ $(document).ready(function() {
         return data;
     }
 
-    // Core DataTable initialization matching your exact Datawrapper layout
+    // Initialize DataTable with processedData
     const table = $('#enrollment-table').DataTable({
-        data: rawData,
+        data: processedData,
         columns: [
             { title: "District", className: 'dt-left' },
             { title: "Level", className: 'dt-left' },
@@ -887,7 +888,7 @@ $(document).ready(function() {
             { title: "% Change", className: 'dt-center', render: renderChangeBadge }
         ],
         pageLength: 25,
-        order: [[0, 'asc'], [2, 'asc']], // Sort by District, then School Name
+        order: [[0, 'asc'], [2, 'asc']],
         language: {
             search: "_INPUT_",
             searchPlaceholder: "Search schools or districts...",
@@ -900,7 +901,7 @@ $(document).ready(function() {
         }
     });
 
-    // Integrated Dropdown Filter Event Handlers
+    // Handle Dropdown Selection Filters
     $('#district-select').on('change', function() {
         table.column(0).search(this.value).draw();
     });
