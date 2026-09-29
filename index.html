@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
     <style>
+        /* --- Datawrapper-Inspired Newsroom Theme --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #333333;
@@ -24,6 +25,7 @@
             margin: 0 auto;
         }
 
+        /* Journalistic Copy Header Styles */
         .chart-header {
             margin-bottom: 22px;
         }
@@ -43,6 +45,7 @@
             line-height: 1.4;
         }
 
+        /* Source Footnote Styles */
         .chart-footer {
             margin-top: 20px;
             padding-top: 12px;
@@ -56,6 +59,7 @@
             margin: 0;
         }
 
+        /* Search & Filter Component Overrides */
         .dataTables_wrapper {
             position: relative;
             clear: both;
@@ -97,6 +101,7 @@
             background-color: #fff;
         }
 
+        /* Custom District / Level Dropdown Filters Toolbar */
         .custom-filter-toolbar {
             display: flex;
             gap: 15px;
@@ -127,6 +132,7 @@
             border-color: #888888;
         }
 
+        /* Structural Grid Elements */
         table.dataTable {
             border-collapse: collapse !important;
             width: 100% !important;
@@ -154,6 +160,7 @@
             color: #333333;
         }
 
+        /* Table Sorting UI Customization */
         table.dataTable thead th.sorting,
         table.dataTable thead th.sorting_asc,
         table.dataTable thead th.sorting_desc {
@@ -165,9 +172,11 @@
         table.dataTable thead th.sorting_asc::after { content: " ▲"; font-size: 10px; color: #111111; padding-left: 4px; }
         table.dataTable thead th.sorting_desc::after { content: " ▼"; font-size: 10px; color: #111111; padding-left: 4px; }
 
+        /* Row Interactivity */
         table.dataTable tbody tr { background-color: #ffffff !important; }
         table.dataTable tbody tr:hover { background-color: #f7f7f7 !important; }
 
+        /* Numeric alignment & Datawrapper Trend Badges */
         .dt-right { text-align: right !important; }
         .dt-center { text-align: center !important; }
         .dt-left { text-align: left !important; }
@@ -185,6 +194,7 @@
         .change-neg { background-color: #fce8e6; color: #c5221f; }
         .change-neutral { background-color: #f1f3f4; color: #5f6368; }
 
+        /* Bottom Control Bar Layout */
         .dataTables_wrapper .dataTables_info {
             float: left !important;
             font-size: 12.5px !important;
@@ -220,6 +230,7 @@
             color: #111111 !important;
         }
 
+        /* Mobile Breakpoints */
         @media (max-width: 640px) {
             .dataTables_wrapper .dataTables_filter,
             .dataTables_wrapper .dataTables_length {
@@ -252,6 +263,7 @@
         <p class="chart-intro">Search and filter school enrollments across Palm Beach and Broward counties over the past three school years.</p>
     </header>
 
+    <!-- Dropdown Filter Controls -->
     <div class="custom-filter-toolbar">
         <div class="filter-group">
             <label for="district-select">District:</label>
@@ -829,14 +841,11 @@ const rawData = [
   ["Broward", "Charter", "West Broward Academy", 785, 748, 722, -63, -8.0]
 ];
 
-// PRE-PROCESSING STEP:
-// Loops through rawData and forces Level (Index 1) to "Combo" 
-// for ANY school containing "6-12", "k-8", or "pk-8"
+// Pre-process data to reclassify "6-12", "k-8", and "pk-8" schools as "Combo"
 const processedData = rawData.map(row => {
-    const schoolName = row[2]; // School Name
+    const schoolName = row[2];
     const nameLower = schoolName.toLowerCase();
 
-    // Check for 6-12, k-8, or pk-8
     if (nameLower.includes("6-12") || nameLower.includes("k-8") || nameLower.includes("pk-8")) {
         return [row[0], "Combo", row[2], row[3], row[4], row[5], row[6], row[7]];
     }
@@ -874,7 +883,6 @@ $(document).ready(function() {
         return data;
     }
 
-    // Initialize DataTable with processedData
     const table = $('#enrollment-table').DataTable({
         data: processedData,
         columns: [
@@ -901,7 +909,6 @@ $(document).ready(function() {
         }
     });
 
-    // Handle Dropdown Selection Filters
     $('#district-select').on('change', function() {
         table.column(0).search(this.value).draw();
     });
@@ -910,6 +917,12 @@ $(document).ready(function() {
         table.column(1).search(this.value).draw();
     });
 });
+</script>
+
+<!-- Pym.js Resizer for iFrame Embeds -->
+<script src="https://pym.nprapps.org/pym.v1.min.js"></script>
+<script>
+    var pymChild = new pym.Child({ polling: 500 });
 </script>
 
 </body>
